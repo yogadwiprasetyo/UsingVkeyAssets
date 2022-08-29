@@ -18,7 +18,7 @@
 
     <application
         android:name=".CustomApplication"
-        android:allowBackup="false"
+        android:allowBackup="true"
         android:extractNativeLibs="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -51,6 +51,10 @@
         <activity
             android:name="com.vkey.android.support.permission.VGuardPermissionActivity"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <activity
+            android:name=".HelloActivity"
+            android:exported="false" />
 
         <activity
             android:name=".MainActivity"
