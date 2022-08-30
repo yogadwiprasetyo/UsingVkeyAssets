@@ -13,6 +13,7 @@ import com.vkey.android.internal.vguard.engine.BasicThreatInfo
 import com.vkey.android.vguard.*
 import com.vkey.android.vguard.VGuardBroadcastReceiver.*
 import org.json.JSONObject
+import vkey.android.vos.VosWrapper
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -29,41 +30,30 @@ class CustomApplication : Application(), VGExceptionHandler,
     private lateinit var broadcastRcvr: VGuardBroadcastReceiver
 
     companion object {
-        private const val PROFILE_LOADED = "vkey.android.vguard.PROFILE_LOADED"
-        private const val VOS_FIRMWARE_RETURN_CODE_KEY = "vkey.android.vguard.FIRMWARE_RETURN_CODE"
-        private const val PROFILE_THREAT_RESPONSE = "vkey.android.vguard.PROFILE_THREAT_RESPONSE"
         private const val TAG_ON_RECEIVE = "OnReceive"
-        private const val TAG_VGUARD_STATUS = "VGuardStatus"
-        private const val TAG_VOS_READY = "VosReady"
-        private const val TAG_VGUARD_MESSAGE = "VguardMessage"
-        private const val TAG_HANDLE_THREAT_POLICY = "HandleThreat"
         private const val TAG = "CustomApplication"
-        private const val DEFAULT_VALUE = 0L
     }
 
-    private fun setupVGuard(activity: Activity) {
-        // TODO: setup V-OS App Protection here,
-        receiveVGuardBroadcast(activity)
+    private fun setupVGuard() {
+        // for receiving notifications from V-OS App Protection
+        receiveVGuardBroadcast()
 
         // register using LocalBroadcastManager only for keeping data within your app
         registerLocalBroadcast()
 
-        /** TODO: Setting up V-OS App Protection here,
-         * Using new configuration method getVGuard(context, config)
-         * */
+        // Setting up V-OS App Protection here
         setupAppProtection()
     }
 
-    private fun receiveVGuardBroadcast(activity: Activity) {
-        broadcastRcvr = object : VGuardBroadcastReceiver(activity) {
+    private fun receiveVGuardBroadcast() {
+        broadcastRcvr = object : VGuardBroadcastReceiver(null) {
             override fun onReceive(context: Context?, intent: Intent?) {
                 super.onReceive(context, intent)
 
                 when {
-                    PROFILE_LOADED == intent?.action -> showLogDebug(
-                        TAG_ON_RECEIVE,
-                        "PROFILE_LOADED"
-                    )
+                    PROFILE_LOADED == intent?.action -> {
+                        showLogDebug(TAG_ON_RECEIVE, "PROFILE_LOADED")
+                    }
 
                     ACTION_SCAN_COMPLETE == intent?.action -> showLogDebug(
                         TAG_ON_RECEIVE,
@@ -82,7 +72,7 @@ class CustomApplication : Application(), VGExceptionHandler,
 
                     VGUARD_STATUS == intent?.action -> {
                         showLogDebug(
-                            TAG_VGUARD_STATUS,
+                            TAG_ON_RECEIVE,
                             "HasExtraVGuardInitStatus: ${intent.hasExtra(VGUARD_INIT_STATUS)}"
                         )
 
@@ -92,7 +82,7 @@ class CustomApplication : Application(), VGExceptionHandler,
                             if (message != null) {
                                 showLogDebug("MSG", message)
                             }
-                            showLogDebug(TAG_VGUARD_MESSAGE, allMessage)
+                            showLogDebug(TAG_ON_RECEIVE, allMessage)
                         }
 
                         if (intent.hasExtra(VGUARD_HANDLE_THREAT_POLICY)) {
@@ -127,13 +117,13 @@ class CustomApplication : Application(), VGExceptionHandler,
                                     }
                                 }
 
-                                showLogDebug(TAG_HANDLE_THREAT_POLICY, builder.toString())
+                                showLogDebug(TAG_ON_RECEIVE, builder.toString())
                             }
                         }
 
                         if (intent.hasExtra(VGUARD_INIT_STATUS)) {
                             showLogDebug(
-                                TAG_VGUARD_STATUS,
+                                TAG_ON_RECEIVE,
                                 "VGUARD_INIT_STATUS: ${
                                     intent.getBooleanExtra(
                                         VGUARD_INIT_STATUS,
@@ -149,25 +139,25 @@ class CustomApplication : Application(), VGExceptionHandler,
                                     val jsonObject =
                                         JSONObject(intent.getStringExtra(VGUARD_MESSAGE))
                                     showLogDebug(
-                                        TAG_VGUARD_STATUS,
+                                        TAG_ON_RECEIVE,
                                         "code: ${jsonObject.getString("code")}"
                                     )
                                     showLogDebug(
-                                        TAG_VGUARD_STATUS,
+                                        TAG_ON_RECEIVE,
                                         "code: ${jsonObject.getString("description")}"
                                     )
                                     message += jsonObject.toString()
                                 } catch (e: Exception) {
-                                    Log.e(TAG_VGUARD_STATUS, e.message.toString())
+                                    Log.e(TAG_ON_RECEIVE, e.message.toString())
                                     e.printStackTrace()
                                 }
-                                showLogDebug(TAG_VGUARD_STATUS, message)
+                                showLogDebug(TAG_ON_RECEIVE, message)
                             }
                         }
 
                         if (intent.hasExtra(VGUARD_SSL_ERROR_DETECTED)) {
                             showLogDebug(
-                                TAG_VGUARD_STATUS,
+                                TAG_ON_RECEIVE,
                                 "VGUARD_SSL_ERROR_DETECTED: ${
                                     intent.getBooleanExtra(
                                         VGUARD_SSL_ERROR_DETECTED,
@@ -183,16 +173,16 @@ class CustomApplication : Application(), VGExceptionHandler,
                                     val jsonObject =
                                         JSONObject(intent.getStringExtra(VGUARD_MESSAGE))
                                     showLogDebug(
-                                        TAG_VGUARD_STATUS,
+                                        TAG_ON_RECEIVE,
                                         jsonObject.getString(VGUARD_ALERT_TITLE)
                                     )
                                     showLogDebug(
-                                        TAG_VGUARD_STATUS,
+                                        TAG_ON_RECEIVE,
                                         jsonObject.getString(VGUARD_ALERT_MESSAGE)
                                     )
                                     message += jsonObject.toString()
                                 } catch (e: Exception) {
-                                    Log.e(TAG_VGUARD_STATUS, e.message.toString())
+                                    Log.e(TAG_ON_RECEIVE, e.message.toString())
                                     e.printStackTrace()
                                 }
                             }
@@ -201,8 +191,8 @@ class CustomApplication : Application(), VGExceptionHandler,
 
                     VOS_READY == intent?.action -> {
                         val firmwareReturnCode =
-                            intent.getLongExtra(VOS_FIRMWARE_RETURN_CODE_KEY, DEFAULT_VALUE)
-                        if (firmwareReturnCode >= DEFAULT_VALUE) {
+                            intent.getLongExtra(VOS_FIRMWARE_RETURN_CODE_KEY, DEFAULT_LONG)
+                        if (firmwareReturnCode >= DEFAULT_LONG) {
                             // if the `VGuardManager` is not available,
                             // create a `VGuardManager` instance from `VGuardFactory`
                             if (vGuardMgr == null) {
@@ -211,14 +201,14 @@ class CustomApplication : Application(), VGExceptionHandler,
 
                                 val isStarted = vGuardMgr?.isVosStarted.toString()
                                 val valueTID = vGuardMgr?.troubleshootingId.toString()
-                                showLogDebug(TAG_VOS_READY, "isVosStarted: $isStarted")
-                                showLogDebug(TAG_VOS_READY, "TID: $valueTID")
+                                showLogDebug(TAG_ON_RECEIVE, "isVosStarted: $isStarted")
+                                showLogDebug(TAG_ON_RECEIVE, "TID: $valueTID")
                             }
                         } else {
                             // Error handling
-                            showLogDebug(TAG_VOS_READY, "vos_ready_error_firmware")
+                            showLogDebug(TAG_ON_RECEIVE, "vos_ready_error_firmware")
                         }
-                        showLogDebug(TAG_VOS_READY, "VOS_READY")
+                        showLogDebug(TAG_ON_RECEIVE, "VOS_READY")
                     }
                 }
             }
@@ -261,8 +251,8 @@ class CustomApplication : Application(), VGExceptionHandler,
     override fun handleException(e: Exception?) {}
 
     override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
-        if (vGuardMgr == null && activity is MainActivity) {
-            setupVGuard(activity)
+        if (vGuardMgr == null && activity is SplashScreenActivity) {
+            setupVGuard()
         }
     }
 
@@ -275,7 +265,7 @@ class CustomApplication : Application(), VGExceptionHandler,
     }
 
     override fun onActivityDestroyed(activity: Activity) {
-        if (activity is MainActivity) {
+        if (activity is SplashScreenActivity) {
             LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastRcvr)
             vGuardMgr?.destroy()
             vGuardMgr = null
