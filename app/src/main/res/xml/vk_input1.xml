@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.inputmethodservice.KeyboardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/keyboard"
+    android:background="@color/grey"
+    android:keyBackground="@drawable/vk_keyboard_background"
+    android:keyTextSize="16sp"
+    android:labelTextSize="12sp" />

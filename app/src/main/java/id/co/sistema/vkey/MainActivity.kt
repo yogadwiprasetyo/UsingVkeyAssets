@@ -1,6 +1,7 @@
 package id.co.sistema.vkey
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
@@ -8,9 +9,19 @@ import android.util.Log
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.vkey.android.internal.vguard.engine.BasicThreatInfo
 import com.vkey.android.vguard.VGException
+import com.vkey.android.vguard.VGuard
+import com.vkey.android.vguard.VGuardFactory
 import com.vkey.securefileio.SecureFile
 import com.vkey.securefileio.SecureFileIO
+import id.co.sistema.vkey.databinding.ActivityMainBinding
+import id.co.sistema.vkey.sfio.*
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 import vkey.android.vos.Vos
 import vkey.android.vos.VosWrapper
 import java.io.ByteArrayOutputStream
@@ -21,7 +32,12 @@ import java.io.FileOutputStream
  * (Bugs) When running on debug, all project working successfully.
  * However using Run app mode, found error acquire v-os
  * */
-class MainActivity : AppCompatActivity(), VosWrapper.Callback {
+class MainActivity : AppCompatActivity() {
+
+    private lateinit var binding: ActivityMainBinding
+    private lateinit var threatAdapter: ThreatAdapter
+    private lateinit var vGuard: VGuard
+
     private lateinit var mVos: Vos
     private lateinit var mStartVosThread: Thread
     private lateinit var tvMessage: TextView
@@ -34,22 +50,71 @@ class MainActivity : AppCompatActivity(), VosWrapper.Callback {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        mVos = Vos(this)
-        mVos.registerVosWrapperCallback(this)
-        tvMessage = findViewById(R.id.tv_message)
-        ivLogo = findViewById(R.id.iv_image)
+//        mVos = Vos(this)
+//        mVos.registerVosWrapperCallback(this)
+        threatAdapter = ThreatAdapter()
+        vGuard = VGuardFactory.getInstance()
+        val vosWrapper = VosWrapper.getInstance(this)
 
-        startVos(this)
+        val message = "${vGuard.isVosStarted} || ${vGuard.sdkVersion()} || ${vGuard.troubleshootingId} || ${vosWrapper.firmwareVersion} || ${vosWrapper.processorVersion}"
+        showLog(LevelInfo.Info, TAG, message)
 
-        // encryptDecryptBlockData() // Success
+        binding.apply {
+            tvTid.text = "TID: ${vGuard.troubleshootingId}"
+            tvValueSdkVersion.text = vGuard.sdkVersion()
+            tvValueFirmwareVersion.text = vosWrapper.firmwareVersion
+            tvValueProcessorVersion.text = vosWrapper.processorVersion
+            tvValueFirmwareCode.text = CustomApplication.firmwareReturnCode.toString()
+        }
+
+//        startVos(this)
+        initClickListener()
+        setupRecyclerView()
+        encryptDecryptBlockData() // Success
         // encryptDecryptStringFile() // Success
         // encryptDecryptByteFile() // Success
         // encryptExistingFile() // Success
         // writeReadEncryptedFile() // Success
         // updatingEncryptedFilePassword() // Success
-        encryptDecryptExistingFileNonText() // Success
+        // encryptDecryptExistingFileNonText() // Success
+    }
+
+    private fun initClickListener() {
+        val context = this
+        binding.apply {
+            // Move to Encrypting/Decrypting a Block of Data
+            btnBlockData.setOnClickListener {
+                startActivity(Intent(context, BlockDataActivity::class.java))
+            }
+
+            // Move to Encrypting/Decrypting a Block of Data to/from a File
+            btnBlockDataFile.setOnClickListener {
+                startActivity(Intent(context, BlockDataToFromFileActivity::class.java))
+            }
+
+            // Move to Encrypting/Decrypting a String to/from a File
+            btnStringFile.setOnClickListener {
+                startActivity(Intent(context, StringToFromFileActivity::class.java))
+            }
+
+            // Move to Encrypting an Existing File
+            btnEncryptExistingFile.setOnClickListener {
+                startActivity(Intent(context, ExistingTextFileActivity::class.java))
+            }
+
+            // Move to Encrypting an Existing Non Text File (Sample Image)
+            btnEncryptFileNonText.setOnClickListener {
+                startActivity(Intent(context, ExistingNonTextFileActivity::class.java))
+            }
+
+            // Move to Demo Secure Keyboard
+            btnSecureKeyboard.setOnClickListener {
+                startActivity(Intent(context, SecureKeyboardActivity::class.java))
+            }
+        }
     }
 
     /**
@@ -72,12 +137,20 @@ class MainActivity : AppCompatActivity(), VosWrapper.Callback {
                     // Successfully started V-OS
                     // Instantiate a `VosWrapper` instance for calling V-OS Processor APIs
                     val vosWrapper = VosWrapper.getInstance(ctx)
-                    val version = vosWrapper.processorVersion
-                    val troubleShootingID = String(vosWrapper.troubleshootingId)
-                    showLogDebug(
-                        TAG,
-                        "ProcessorVers: $version || TroubleShootingID: $troubleShootingID"
-                    )
+                    val processorVersion = vosWrapper.processorVersion
+                    val firmwareVersion = vosWrapper.firmwareVersion
+                    val troubleShootingID = vGuard.troubleshootingId
+                    val sdkVersion = vGuard.sdkVersion()
+
+                    runOnUiThread {
+                        binding.apply {
+                            tvTid.text = "TID: $troubleShootingID"
+                            tvValueSdkVersion.text = sdkVersion
+                            tvValueFirmwareVersion.text = firmwareVersion
+                            tvValueProcessorVersion.text = processorVersion
+                            tvValueFirmwareCode.text = vosReturnCode.toString()
+                        }
+                    }
                 } else {
                     // Failed to start V-OS
                     Log.e(TAG, "Failed to start V-OS")
@@ -93,6 +166,53 @@ class MainActivity : AppCompatActivity(), VosWrapper.Callback {
 
     private fun stopVos() {
         mVos.stop()
+    }
+
+    private fun setupRecyclerView() {
+        binding.rvThreats.apply {
+            layoutManager = LinearLayoutManager(this@MainActivity)
+            adapter = threatAdapter
+        }
+    }
+
+    /**
+     * Method to retrieve [BasicThreatInfo] from [CustomApplication] class
+     * after being broadcast by [EventBus].
+     */
+    @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
+    fun onMessageEvent(threats: ArrayList<BasicThreatInfo>) {
+        val message = "Threat onMessageEvent: $threats, threats size: ${threats.size}"
+        showLog(LevelInfo.Debug, TAG, message)
+        binding.pbThreats.isVisible = false
+
+        if (threats.isEmpty()) {
+            binding.rvThreats.isVisible = false
+            binding.tvNoThreat.isVisible = true
+            return
+        }
+
+        threatAdapter.submitList(threats)
+
+        binding.rvThreats.isVisible = true
+        binding.tvNoThreat.isVisible = false
+    }
+
+    /**
+     * Handle [EventBus] lifecycle.
+     */
+    override fun onStart() {
+        super.onStart()
+        showLog(LevelInfo.Debug, TAG, "EventBus OnStart")
+        EventBus.getDefault().register(this)
+    }
+
+    /**
+     * Handle [EventBus] lifecycle.
+     */
+    override fun onPause() {
+        super.onPause()
+        showLog(LevelInfo.Debug, TAG, "EventBus OnPause")
+        EventBus.getDefault().unregister(this)
     }
 
     /**
@@ -112,8 +232,8 @@ class MainActivity : AppCompatActivity(), VosWrapper.Callback {
             val decrypted = SecureFileIO.decryptData(chiper)
             val decryptedInput = String(decrypted)
 
-            showLogDebug(TAG_SFIO, decryptedInput)
-            tvMessage.text = decryptedInput
+            showLog(LevelInfo.Debug,TAG_SFIO, decryptedInput)
+//            tvMessage.text = decryptedInput
         } catch (e: Exception) {
             Log.e(TAG, e.message.toString())
             e.printStackTrace()
@@ -138,7 +258,7 @@ class MainActivity : AppCompatActivity(), VosWrapper.Callback {
             // Decrypt the encrypted file in the string format
             val decryptedString = SecureFileIO.decryptString(encryptedFilePath, PASSWORD)
 
-            showLogDebug(TAG_SFIO, decryptedString)
+            showLog(LevelInfo.Debug,TAG_SFIO, decryptedString)
             tvMessage.text = decryptedString
         } catch (e: Exception) {
             Log.e(TAG, e.message.toString())
@@ -167,7 +287,7 @@ class MainActivity : AppCompatActivity(), VosWrapper.Callback {
             val decrypted = SecureFileIO.decryptFile(encryptedFilePath, PASSWORD)
             val decryptedResult = String(decrypted)
 
-            showLogDebug(TAG_SFIO, decryptedResult)
+            showLog(LevelInfo.Debug,TAG_SFIO, decryptedResult)
             tvMessage.text = decryptedResult
         } catch (e: Exception) {
             Log.e(TAG, e.message.toString())
@@ -256,7 +376,7 @@ class MainActivity : AppCompatActivity(), VosWrapper.Callback {
             .bufferedReader()
             .use { it.readText() }
 
-        showLogDebug(TAG_SFIO, textInString)
+        showLog(LevelInfo.Debug,TAG_SFIO, textInString)
         tvMessage.text = textInString
     }
 
@@ -297,7 +417,7 @@ class MainActivity : AppCompatActivity(), VosWrapper.Callback {
             // SecureFileIO.updateFile(filePath, "", newPassword)
 
             val message = "Updating password successfully"
-            showLogDebug(TAG_SFIO, message)
+            showLog(LevelInfo.Debug,TAG_SFIO, message)
             tvMessage.text = message
         } catch (e: Exception) {
             Log.e(TAG_SFIO, e.message.toString())
@@ -333,9 +453,10 @@ class MainActivity : AppCompatActivity(), VosWrapper.Callback {
      * */
     private fun creatingPNGFileFromDrawable(filePath: String) {
         val bitmap = BitmapFactory.decodeResource(this.resources, R.drawable.gojek_logo)
-        val bos = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.PNG, 0, bos) // Also can use JPEG file
-        val bitmapData = bos.toByteArray()
+        val bitmapData = ByteArrayOutputStream().use {
+            bitmap.compress(Bitmap.CompressFormat.PNG, 0, it)
+            it.toByteArray()
+        }
 
         FileOutputStream(filePath).use {
             it.write(bitmapData)
@@ -343,11 +464,11 @@ class MainActivity : AppCompatActivity(), VosWrapper.Callback {
             it.close()
         }
 
-        showLogDebug(TAG_SFIO, "Creating new file png")
+        showLog(LevelInfo.Debug,TAG_SFIO, "Creating new file png")
     }
 
-    override fun onNotified(p0: Int, p1: Int): Boolean {
-        showLogDebug(TAG, "$p0 || $p1")
-        return true
-    }
+//    override fun onNotified(p0: Int, p1: Int): Boolean {
+//        showLog(LevelInfo.Debug,TAG, "$p0 || $p1")
+//        return true
+//    }
 }

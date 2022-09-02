@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="VKSecureEditText">
+        <attr name="adjustMode" format="boolean"/>
+        <attr name="randomized" format="boolean"/>
+        <attr name="inDialog" format="boolean"/>
+    </declare-styleable>
+
+    <dimen name="sp_16">16sp</dimen>
+    <dimen name="sp_12">12sp</dimen>
+</resources>
