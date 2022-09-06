@@ -15,6 +15,7 @@ import com.vkey.android.internal.vguard.engine.BasicThreatInfo
 import com.vkey.android.vguard.VGException
 import com.vkey.android.vguard.VGuard
 import com.vkey.android.vguard.VGuardFactory
+import com.vkey.securefileio.SecureData.encrypt
 import com.vkey.securefileio.SecureFile
 import com.vkey.securefileio.SecureFileIO
 import id.co.sistema.vkey.databinding.ActivityMainBinding
@@ -53,13 +54,11 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-//        mVos = Vos(this)
-//        mVos.registerVosWrapperCallback(this)
         threatAdapter = ThreatAdapter()
         vGuard = VGuardFactory.getInstance()
         val vosWrapper = VosWrapper.getInstance(this)
 
-        val message = "${vGuard.isVosStarted} || ${vGuard.sdkVersion()} || ${vGuard.troubleshootingId} || ${vosWrapper.firmwareVersion} || ${vosWrapper.processorVersion}"
+        val message = "${vGuard.isVosStarted} || ${vGuard.sdkVersion()} || ${vGuard.troubleshootingId} || ${vosWrapper.firmwareVersion} || ${vosWrapper.processorVersion} || ${CustomApplication.firmwareReturnCode}"
         showLog(LevelInfo.Info, TAG, message)
 
         binding.apply {
@@ -80,6 +79,12 @@ class MainActivity : AppCompatActivity() {
         // writeReadEncryptedFile() // Success
         // updatingEncryptedFilePassword() // Success
         // encryptDecryptExistingFileNonText() // Success
+    }
+
+    override fun onResume() {
+        super.onResume()
+        showLog(LevelInfo.Info, TAG, "OnResume-isVosStarted: ${CustomApplication.isVosStart}")
+        encryptDecryptBlockData()
     }
 
     private fun initClickListener() {

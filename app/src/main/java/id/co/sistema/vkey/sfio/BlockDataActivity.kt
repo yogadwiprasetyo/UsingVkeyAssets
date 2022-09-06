@@ -23,6 +23,10 @@ class BlockDataActivity : AppCompatActivity() {
         binding.btnDecrypt.setOnClickListener { decrypt() }
     }
 
+    /**
+     * Found Error Again VOSMI 60: Failed to acquire v-os
+     * When doing SFIO operations in different activity, found failed required to acquicre v-os again
+     * */
     private fun encrypt() {
         if (fieldIsEmpty(binding.etInput)) {
             binding.etInput.error = "Input can't be empty!"
@@ -43,6 +47,10 @@ class BlockDataActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Found Error Again VOSMI 60: Failed to acquire v-os
+     * When doing SFIO operations in different activity, found failed required to acquicre v-os again
+     * */
     private fun decrypt() {
         if (chiper.isEmpty()) {
             Toast.makeText(this, "Chiper is empty!", Toast.LENGTH_SHORT).show()

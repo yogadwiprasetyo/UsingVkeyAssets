@@ -10,6 +10,7 @@ import android.os.AsyncTask.execute
 import android.text.TextUtils
 import android.util.Log
 import com.vkey.android.internal.vguard.engine.BasicThreatInfo
+import com.vkey.android.support.permission.VGuardPermissionActivity
 import com.vkey.android.vguard.*
 import com.vkey.android.vguard.VGuardBroadcastReceiver.*
 import kotlinx.coroutines.Dispatchers
@@ -35,8 +36,6 @@ class CustomApplication : Application(), VGExceptionHandler,
 
     private lateinit var mVos: Vos
     private lateinit var mStartVosThread: Thread
-
-    var firmwareReturnCode = 0L
 
     private fun setupVGuard() {
         receiveVGuardBroadcast()
@@ -64,6 +63,7 @@ class CustomApplication : Application(), VGExceptionHandler,
                     ACTION_SCAN_COMPLETE == intent?.action -> {
                         showLog(LevelInfo.Debug, TAG, "Scan complete...")
                         scanningThreats(intent)
+                        EventBus.getDefault().post(vGuardMgr?.isVosStarted)
                     }
 
                     VGUARD_STATUS == intent?.action -> {
@@ -85,8 +85,11 @@ class CustomApplication : Application(), VGExceptionHandler,
 
                 mVos = Vos(this)
                 mVos.registerVosWrapperCallback(this)
-                firmwareReturnCode = firmwareCode
-//                startVos(this)
+                startVos(this)
+
+                firmwareReturnCode  = firmwareCode
+                isVosStart = vGuardMgr?.isVosStarted == true
+//                EventBus.getDefault().post(vGuardMgr?.isVosStarted)
             }
         } else {
             // Error handling
@@ -112,7 +115,6 @@ class CustomApplication : Application(), VGExceptionHandler,
         Handler(Looper.getMainLooper()).postDelayed({
             EventBus.getDefault().post(threats)
         }, 5000)
-//        EventBus.getDefault().post(threats)
     }
 
     /**
@@ -148,113 +150,33 @@ class CustomApplication : Application(), VGExceptionHandler,
     }
 
     private fun startVos(ctx: Context) {
-        runBlocking {
-            launch(Dispatchers.IO) {
-                delay(10000)
-                try {
-                    // Get the kernel data in byte from `firmware` asset file
-                    val inputStream = ctx.assets.open("firmware")
-                    val kernelData = inputStream.readBytes()
-                    inputStream.read(kernelData)
-                    inputStream.close()
+        // TODO: Too much work in main thread
+        mStartVosThread = Thread {
+            try {
+                // Get the kernel data in byte from `firmware` asset file
+                val inputStream = ctx.assets.open("firmware")
+                val kernelData = inputStream.readBytes()
+                inputStream.read(kernelData)
+                inputStream.close()
 
-                    // Start V-OS
-                    val vosReturnCode = mVos.start(kernelData, null, null, null, null)
+                // Start V-OS
+                val vosReturnCode = mVos.start(kernelData, null, null, null, null)
 
-                    if (vosReturnCode > 0) {
-                        // Successfully started V-OS
-                        // Instantiate a `VosWrapper` instance for calling V-OS Processor APIs
-                        val vosWrapper = VosWrapper.getInstance(ctx)
-                    } else {
-                        // Failed to start V-OS
-                        Log.e(TAG, "Failed to start V-OS")
-                    }
-                } catch (e: VGException) {
-                    Log.e(TAG, e.message.toString())
-                    e.printStackTrace()
+                if (vosReturnCode > 0) {
+                    // Successfully started V-OS
+                    // Instantiate a `VosWrapper` instance for calling V-OS Processor APIs
+                    showLog(LevelInfo.Debug, TAG, "Successfully started V-OS")
+                } else {
+                    // Failed to start V-OS
+                    showLog(LevelInfo.Error, TAG, "Failed to start V-OS")
                 }
+            } catch (e: VGException) {
+                showLog(LevelInfo.Error, TAG, e.message.toString())
+                e.printStackTrace()
             }
         }
 
-        // TODO: Too much work in main thread
-//        thread {
-//            try {
-//                // Get the kernel data in byte from `firmware` asset file
-//                val inputStream = ctx.assets.open("firmware")
-//                val kernelData = inputStream.readBytes()
-//                inputStream.read(kernelData)
-//                inputStream.close()
-//
-//                // Start V-OS
-//                val vosReturnCode = mVos.start(kernelData, null, null, null, null)
-//
-//                if (vosReturnCode > 0) {
-//                    // Successfully started V-OS
-//                    // Instantiate a `VosWrapper` instance for calling V-OS Processor APIs
-//                    val vosWrapper = VosWrapper.getInstance(ctx)
-//                } else {
-//                    // Failed to start V-OS
-//                    Log.e(TAG, "Failed to start V-OS")
-//                }
-//            } catch (e: VGException) {
-//                Log.e(TAG, e.message.toString())
-//                e.printStackTrace()
-//            }
-//        }
-
-        // TODO: Not Stable, sometimes is safe, sometimes is broke
-//        Executors.newSingleThreadExecutor().execute {
-//            try {
-//                // Get the kernel data in byte from `firmware` asset file
-//                val inputStream = ctx.assets.open("firmware")
-//                val kernelData = inputStream.readBytes()
-//                inputStream.read(kernelData)
-//                inputStream.close()
-//
-//                // Start V-OS
-//                val vosReturnCode = mVos.start(kernelData, null, null, null, null)
-//
-//                if (vosReturnCode > 0) {
-//                    // Successfully started V-OS
-//                    // Instantiate a `VosWrapper` instance for calling V-OS Processor APIs
-//                    val vosWrapper = VosWrapper.getInstance(ctx)
-//                } else {
-//                    // Failed to start V-OS
-//                    Log.e(TAG, "Failed to start V-OS")
-//                }
-//            } catch (e: VGException) {
-//                Log.e(TAG, e.message.toString())
-//                e.printStackTrace()
-//            }
-//        }
-
-        // TODO: Too much work in main thread
-//        mStartVosThread = Thread {
-//            try {
-//                // Get the kernel data in byte from `firmware` asset file
-//                val inputStream = ctx.assets.open("firmware")
-//                val kernelData = inputStream.readBytes()
-//                inputStream.read(kernelData)
-//                inputStream.close()
-//
-//                // Start V-OS
-//                val vosReturnCode = mVos.start(kernelData, null, null, null, null)
-//
-//                if (vosReturnCode > 0) {
-//                    // Successfully started V-OS
-//                    // Instantiate a `VosWrapper` instance for calling V-OS Processor APIs
-//                    val vosWrapper = VosWrapper.getInstance(ctx)
-//                } else {
-//                    // Failed to start V-OS
-//                    Log.e(TAG, "Failed to start V-OS")
-//                }
-//            } catch (e: VGException) {
-//                Log.e(TAG, e.message.toString())
-//                e.printStackTrace()
-//            }
-//        }
-//
-//        mStartVosThread.start()
+        mStartVosThread.start()
     }
 
     override fun onCreate() {
@@ -297,6 +219,7 @@ class CustomApplication : Application(), VGExceptionHandler,
     companion object {
         private val TAG = CustomApplication::class.java.simpleName
         var firmwareReturnCode = 0L
+        var isVosStart = false
     }
 
     override fun onNotified(p0: Int, p1: Int): Boolean {
