@@ -6,4 +6,68 @@
     android:layout_height="match_parent"
     tools:context=".sfio.ExistingNonTextFileActivity">
 
+    <TextView
+        android:id="@+id/tv_path"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Path: /document/image/japan.png" />
+
+    <ImageButton
+        android:id="@+id/ib_upload"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:src="@drawable/ic_upload"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_path" />
+
+    <Button
+        android:id="@+id/btn_encrypt_image"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        android:text="Encrypt Image"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/ib_upload"
+        app:layout_constraintTop_toBottomOf="@id/tv_path" />
+
+    <TextView
+        android:id="@+id/tv_result_encrypt"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btn_encrypt_image"
+        tools:text="Result: Encrypted success" />
+
+    <Button
+        android:id="@+id/btn_decrypt_image"
+        style="@style/ButtonCustom"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:enabled="false"
+        android:text="Decrypt Image"
+        app:layout_constraintTop_toBottomOf="@id/tv_result_encrypt" />
+
+    <ImageView
+        android:id="@+id/iv_result"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_marginTop="8dp"
+        android:src="@drawable/ic_preview"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btn_decrypt_image" />
 </androidx.constraintlayout.widget.ConstraintLayout>

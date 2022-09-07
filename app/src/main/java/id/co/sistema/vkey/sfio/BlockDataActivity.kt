@@ -4,7 +4,7 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.vkey.securefileio.SecureFileIO
-import id.co.sistema.vkey.LevelInfo
+import id.co.sistema.vkey.clear
 import id.co.sistema.vkey.databinding.ActivityBlockDataBinding
 import id.co.sistema.vkey.fieldIsEmpty
 import id.co.sistema.vkey.showLog
@@ -23,12 +23,8 @@ class BlockDataActivity : AppCompatActivity() {
         binding.btnDecrypt.setOnClickListener { decrypt() }
     }
 
-    /**
-     * Found Error Again VOSMI 60: Failed to acquire v-os
-     * When doing SFIO operations in different activity, found failed required to acquicre v-os again
-     * */
     private fun encrypt() {
-        if (fieldIsEmpty(binding.etInput)) {
+        if (binding.etInput.fieldIsEmpty()) {
             binding.etInput.error = "Input can't be empty!"
             return
         }
@@ -40,17 +36,13 @@ class BlockDataActivity : AppCompatActivity() {
             binding.apply {
                 tvCiphertext.text = chiper.toString()
                 btnDecrypt.isEnabled = true
+                etInput.clear()
             }
         } catch (e: Exception) {
-            showLog(LevelInfo.Error, "BlockData", e.message.toString())
-            e.printStackTrace()
+            showLog(e)
         }
     }
 
-    /**
-     * Found Error Again VOSMI 60: Failed to acquire v-os
-     * When doing SFIO operations in different activity, found failed required to acquicre v-os again
-     * */
     private fun decrypt() {
         if (chiper.isEmpty()) {
             Toast.makeText(this, "Chiper is empty!", Toast.LENGTH_SHORT).show()
@@ -63,8 +55,7 @@ class BlockDataActivity : AppCompatActivity() {
 
             binding.tvDecryptedText.text = decryptedInString
         } catch (e: Exception) {
-            showLog(LevelInfo.Error, "BlockData", e.message.toString())
-            e.printStackTrace()
+            showLog(e)
         }
     }
 }

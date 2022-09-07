@@ -1,7 +1,7 @@
 package id.co.sistema.vkey.sfio
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 import com.vkey.securefileio.SecureFileIO
 import id.co.sistema.vkey.*
 import id.co.sistema.vkey.databinding.ActivityExistingTextFileBinding
@@ -28,26 +28,56 @@ class ExistingTextFileActivity : AppCompatActivity() {
     }
 
     private fun encrypt() {
-        if (fieldIsEmpty(binding.etPassword)) {
+        if (binding.etPassword.fieldIsEmpty()) {
             showToast("Password must be filled!")
             return
+        }
+
+        if (!isFileEncrypted) {
+            overwriteExistingFile()
         }
 
         try {
             val password = usePrefixValidPassword(binding.etPassword.text.toString())
             SecureFileIO.encryptFile(encryptedFileLocation, password)
 
-            isFileEncrypted = true
+            updateButtonState()
+            binding.etPassword.clear()
             showToast("File encrypted")
         } catch (e: Exception) {
             showToast("Failed encrypted file")
-            showLog(LevelInfo.Debug, TAG, e.message.toString())
-            e.printStackTrace()
+            showLog(e)
         }
     }
 
+    private fun overwriteExistingFile() {
+        try {
+            FileOutputStream(encryptedFileLocation).use {
+                it.write(STR_INPUT.toByteArray())
+                it.close()
+            }
+            showToast("Existing file overwritten")
+        } catch (e: Exception) {
+            showToast("Failed overwrite existing file")
+            showLog(e)
+        }
+    }
+
+    /**
+     * Enabling button update and decrypt, also update state file encrypted, if encrypt is success.
+     *
+     * When existing file is already encrypted, button encrypt is disabled,
+     * for avoiding encrypt file is already encrypting.
+     * */
+    private fun updateButtonState() {
+        isFileEncrypted = true
+        binding.btnUpdate.isEnabled = true
+        binding.btnDecrypt.isEnabled = true
+        binding.btnEncrypt.isEnabled = false
+    }
+
     private fun decrypt() {
-        if (fieldIsEmpty(binding.etPasswordDc)) {
+        if (binding.etPasswordDc.fieldIsEmpty()) {
             showToast("Password must be filled!")
             return
         }
@@ -55,63 +85,45 @@ class ExistingTextFileActivity : AppCompatActivity() {
         try {
             val password = usePrefixValidPassword(binding.etPasswordDc.text.toString())
             val textInString = com.vkey.securefileio.FileInputStream(encryptedFileLocation, password)
-                .bufferedReader().use { it.readText() }
+                    .bufferedReader().use { it.readText() }
 
             binding.tvRead.text = textInString
+            binding.etPasswordDc.clear()
             showToast("Decrypted file")
         } catch (e: Exception) {
             showToast("Failed decrypted file")
-            showLog(LevelInfo.Error, TAG, e.message.toString())
-            e.printStackTrace()
+            showLog(e)
         }
     }
 
     private fun updateContent() {
-        if (fieldIsEmpty(binding.etInput) && fieldIsEmpty(binding.etPasswordUd)) {
+        if (binding.etInput.fieldIsEmpty() && binding.etPasswordUd.fieldIsEmpty()) {
             showToast("Content and password must be filled!")
             return
         }
 
-        if (isFileEncrypted) {
-            overwriteEncryptedFile()
-        } else {
-            overwriteExistingFile()
-        }
-
-        showToast("Content is updated")
-    }
-
-    private fun overwriteEncryptedFile() {
         try {
-            val file = File(encryptedFileLocation)
             val data = binding.etInput.text.toString()
             val password = usePrefixValidPassword(binding.etPasswordUd.text.toString())
-            com.vkey.securefileio.FileOutputStream(file, password).use {
+            com.vkey.securefileio.FileOutputStream(encryptedFileLocation, password).use {
                 it.write(data.toByteArray())
                 it.close()
             }
-            showToast("Encrypted file overwritten")
+
+            clearFieldUpdateContent()
+            showToast("Content is updated")
         } catch (e: Exception) {
-            showToast("Failed overwrite encrypted file")
-            showLog(LevelInfo.Error, TAG, e.message.toString())
-            e.printStackTrace()
+            showToast("Failed update content")
+            showLog(e)
         }
     }
 
-    private fun overwriteExistingFile() {
-        try {
-            val file = File(encryptedFileLocation)
-            val data = binding.etInput.text.toString()
-            FileOutputStream(file).use {
-                it.write(data.toByteArray())
-                it.close()
-            }
-            showToast("Existing file overwritten")
-        } catch (e: Exception) {
-            showToast("Failed overwrite existing file")
-            showLog(LevelInfo.Error, TAG, e.message.toString())
-            e.printStackTrace()
-        }
+    /**
+     * Clearing field input to remove old value
+     * */
+    private fun clearFieldUpdateContent() {
+        binding.etInput.clear()
+        binding.etPasswordUd.clear()
     }
 
     private fun prepareFiles() {
@@ -122,13 +134,9 @@ class ExistingTextFileActivity : AppCompatActivity() {
         val file = File(encryptedFileLocation)
         if (!file.exists()) {
             file.createNewFile()
-            showLog(LevelInfo.Debug, TAG, "Creating new file")
+            showLog("Creating new file")
         } else {
-            showLog(LevelInfo.Debug, TAG, "Use existing file")
+            showLog("Use existing file")
         }
-    }
-
-    companion object {
-        private const val TAG = "StringToFromFile"
     }
 }

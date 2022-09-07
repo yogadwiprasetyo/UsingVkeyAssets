@@ -5,34 +5,25 @@ import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.os.*
-import android.os.AsyncTask.execute
-import android.text.TextUtils
-import android.util.Log
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.Parcelable
 import com.vkey.android.internal.vguard.engine.BasicThreatInfo
-import com.vkey.android.support.permission.VGuardPermissionActivity
 import com.vkey.android.vguard.*
 import com.vkey.android.vguard.VGuardBroadcastReceiver.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.greenrobot.eventbus.EventBus
 import vkey.android.vos.Vos
 import vkey.android.vos.VosWrapper
-import java.text.SimpleDateFormat
-import java.util.*
-import java.util.concurrent.Executor
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-import kotlin.concurrent.thread
 
 class CustomApplication : Application(), VGExceptionHandler,
     Application.ActivityLifecycleCallbacks, VosWrapper.Callback {
 
-    private var vGuardMgr: VGuard? = null // VGuard object that is used for scanning
-    private lateinit var hook: VGuardLifecycleHook // LifecycleHook to notify VGuard of activity's lifecycle
-    private lateinit var broadcastRcvr: VGuardBroadcastReceiver // For VGuard to notify host app of events
+    // LifecycleHook to notify VGuard of activity's lifecycle
+    private lateinit var hook: VGuardLifecycleHook
+
+    // For VGuard to notify host app of events
+    private lateinit var broadcastRcvr: VGuardBroadcastReceiver
 
     private lateinit var mVos: Vos
     private lateinit var mStartVosThread: Thread
@@ -52,31 +43,25 @@ class CustomApplication : Application(), VGExceptionHandler,
                 super.onReceive(context, intent)
 
                 when {
-                    PROFILE_LOADED == intent?.action -> {
-                        showLog(LevelInfo.Debug, TAG, "Profile is loaded...")
-                    }
+                    PROFILE_LOADED == intent?.action -> showLog("Profile is loaded...")
 
-                    VOS_READY == intent?.action -> {
-                        instanceVGuardManager(intent)
-                    }
+                    VOS_READY == intent?.action -> instanceVGuardManager(intent)
 
                     ACTION_SCAN_COMPLETE == intent?.action -> {
-                        showLog(LevelInfo.Debug, TAG, "Scan complete...")
+                        showLog("Scan complete...")
                         scanningThreats(intent)
                         EventBus.getDefault().post(vGuardMgr?.isVosStarted)
                     }
 
-                    VGUARD_STATUS == intent?.action -> {
-//                        scanThreatsDetected(intent)
-                    }
+                    VGUARD_STATUS == intent?.action -> {}
                 }
             }
         }
     }
 
     private fun instanceVGuardManager(intent: Intent) {
-        val firmwareCode = intent.getLongExtra(VOS_FIRMWARE_RETURN_CODE_KEY, 0)
-        if (firmwareCode >= 0) {
+        val firmwareCode = intent.getLongExtra(VOS_FIRMWARE_RETURN_CODE_KEY, DEFAULT_LONG)
+        if (firmwareCode >= DEFAULT_LONG) {
             // if the `VGuardManager` is not available,
             // create a `VGuardManager` instance from `VGuardFactory`
             if (vGuardMgr == null) {
@@ -87,29 +72,31 @@ class CustomApplication : Application(), VGExceptionHandler,
                 mVos.registerVosWrapperCallback(this)
                 startVos(this)
 
-                firmwareReturnCode  = firmwareCode
+                firmwareReturnCode = firmwareCode
                 isVosStart = vGuardMgr?.isVosStarted == true
-//                EventBus.getDefault().post(vGuardMgr?.isVosStarted)
             }
         } else {
             // Error handling
             val message = "firmwareCode: $firmwareCode, failed instance VGuardManager"
-            showLog(LevelInfo.Error, TAG, message)
+            showLog(Exception(message))
         }
     }
 
+    /**
+     * Scan all threats in devices
+     * */
     private fun scanningThreats(intent: Intent) {
         val detectedThreats = intent
             .getParcelableArrayListExtra<Parcelable>(SCAN_COMPLETE_RESULT) as ArrayList<Parcelable>
 
         val threats: ArrayList<BasicThreatInfo> = arrayListOf()
-        for(item in detectedThreats) {
+        for (item in detectedThreats) {
             threats.add(item as BasicThreatInfo)
-            showLog(LevelInfo.Debug, TAG, "Threat: $threats")
+            showLog("Threat: $threats")
         }
 
         /**
-         * EventBus is used to send the threat into [MainActivity]. It need to be delayed for 3 sec
+         * EventBus is used to send the threat into [MainActivity]. It need to be delayed for 5 sec
          * to make sure [MainActivity] is already rendered on the screen.
          */
         Handler(Looper.getMainLooper()).postDelayed({
@@ -144,13 +131,11 @@ class CustomApplication : Application(), VGExceptionHandler,
 
             VGuardFactory().getVGuard(this, config)
         } catch (e: Exception) {
-            showLog(LevelInfo.Error, TAG, e.message.toString())
-            e.printStackTrace()
+            showLog(e)
         }
     }
 
     private fun startVos(ctx: Context) {
-        // TODO: Too much work in main thread
         mStartVosThread = Thread {
             try {
                 // Get the kernel data in byte from `firmware` asset file
@@ -165,14 +150,14 @@ class CustomApplication : Application(), VGExceptionHandler,
                 if (vosReturnCode > 0) {
                     // Successfully started V-OS
                     // Instantiate a `VosWrapper` instance for calling V-OS Processor APIs
-                    showLog(LevelInfo.Debug, TAG, "Successfully started V-OS")
+                    vosWrapper = VosWrapper.getInstance(this)
+                    showLog("Successfully started V-OS")
                 } else {
                     // Failed to start V-OS
-                    showLog(LevelInfo.Error, TAG, "Failed to start V-OS")
+                    showLog("Failed to start V-OS")
                 }
             } catch (e: VGException) {
-                showLog(LevelInfo.Error, TAG, e.message.toString())
-                e.printStackTrace()
+                showLog(e)
             }
         }
 
@@ -202,14 +187,11 @@ class CustomApplication : Application(), VGExceptionHandler,
     override fun onActivityDestroyed(activity: Activity) {
         if (activity is SplashScreenActivity) {
             LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastRcvr)
-            vGuardMgr?.destroy()
-            vGuardMgr = null
         }
     }
 
     override fun handleException(e: Exception?) {
-        showLog(LevelInfo.Error, TAG, e?.message.toString())
-        e?.printStackTrace()
+        showLog(Exception(e?.message.toString()))
     }
 
     override fun onActivityStarted(activity: Activity) {}
@@ -217,7 +199,9 @@ class CustomApplication : Application(), VGExceptionHandler,
     override fun onActivitySaveInstanceState(activity: Activity, savedInstanceState: Bundle) {}
 
     companion object {
-        private val TAG = CustomApplication::class.java.simpleName
+        // VGuard object that is used for scanning
+        var vGuardMgr: VGuard? = null
+        var vosWrapper: VosWrapper? = null
         var firmwareReturnCode = 0L
         var isVosStart = false
     }

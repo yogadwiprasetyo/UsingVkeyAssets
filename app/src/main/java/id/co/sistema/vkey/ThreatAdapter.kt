@@ -28,7 +28,6 @@ class ThreatAdapter : ListAdapter<BasicThreatInfo, ThreatAdapter.ThreatViewHolde
     class ThreatViewHolder(private val binding: ItemThreatsBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(basicThreatInfo: BasicThreatInfo) {
-            showLog(LevelInfo.Debug, "Adapter", basicThreatInfo.threatName)
             binding.apply {
                 tvThreatClass.text = basicThreatInfo.threatClass
                 tvThreatInfo.text = basicThreatInfo.threatInfo

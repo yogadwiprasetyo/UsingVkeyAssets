@@ -1,7 +1,7 @@
 package id.co.sistema.vkey.sfio
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 import com.vkey.securefileio.SecureFileIO
 import id.co.sistema.vkey.*
 import id.co.sistema.vkey.databinding.ActivityBlockDataToFromFileBinding
@@ -26,28 +26,38 @@ class BlockDataToFromFileActivity : AppCompatActivity() {
     }
 
     private fun encrypt() {
-        if (fieldIsEmpty(binding.etInput) && fieldIsEmpty(binding.etPasswordEc)) {
+        if (binding.etInput.fieldIsEmpty() && binding.etPasswordEc.fieldIsEmpty()) {
             showToast("Field input and password should not empty!")
             return
         }
 
-        val data = binding.etInput.text.toString().toByteArray()
-        val password = usePrefixValidPassword(binding.etPasswordEc.text.toString())
-
         try {
+            val data = binding.etInput.text.toString().toByteArray()
+            val password = usePrefixValidPassword(binding.etPasswordEc.text.toString())
+
             SecureFileIO.encryptData(data, encryptedFileLocation, password, false)
-            binding.btnRead.isEnabled = true
-            binding.btnUpdate.isEnabled = true
+            updateStateButton()
+
+            clearFieldEncrypt()
             showToast("Text encrypted")
         } catch (e: Exception) {
             showToast("Failed encrypted text")
-            showLog(LevelInfo.Error, TAG, e.message.toString())
-            e.printStackTrace()
+            showLog(e)
         }
     }
 
+    private fun updateStateButton() {
+        binding.btnRead.isEnabled = true
+        binding.btnUpdate.isEnabled = true
+    }
+
+    private fun clearFieldEncrypt() {
+        binding.etInput.clear()
+        binding.etPasswordEc.clear()
+    }
+
     private fun decrypt() {
-        if (fieldIsEmpty(binding.etPasswordDc)) {
+        if (binding.etPasswordDc.fieldIsEmpty()) {
             showToast("Field password decrypt should not empty")
             return
         }
@@ -56,13 +66,18 @@ class BlockDataToFromFileActivity : AppCompatActivity() {
         try {
             val decrypted = SecureFileIO.decryptFile(encryptedFileLocation, password)
             val decryptInString = "Text: ${String(decrypted)}"
-            binding.tvReadFile.text = decryptInString
+
+            showResultAndClearField(decryptInString)
             showToast("File decrypted")
         } catch (e: Exception) {
             showToast("Failed decrypted file")
-            showLog(LevelInfo.Error, TAG, e.message.toString())
-            e.printStackTrace()
+            showLog(e)
         }
+    }
+
+    private fun showResultAndClearField(text: String) {
+        binding.tvReadFile.text = text
+        binding.etPasswordDc.clear()
     }
 
     private fun updatePassword() {
@@ -70,10 +85,10 @@ class BlockDataToFromFileActivity : AppCompatActivity() {
         val newPassword = usePrefixValidPassword(binding.etPasswordNp.text.toString())
         val confirmNewPassword = usePrefixValidPassword(binding.etPasswordCnp.text.toString())
 
-        if (
-            fieldIsEmpty(binding.etPasswordOp) ||
-            fieldIsEmpty(binding.etPasswordNp) ||
-            fieldIsEmpty(binding.etPasswordCnp)
+        if ( // Op: Old password, Np: New password, Cnp: Confirm new password
+            binding.etPasswordOp.fieldIsEmpty() ||
+            binding.etPasswordNp.fieldIsEmpty() ||
+            binding.etPasswordCnp.fieldIsEmpty()
         ) {
             showToast("Field password should not be empty!")
             return
@@ -86,12 +101,19 @@ class BlockDataToFromFileActivity : AppCompatActivity() {
 
         try {
             SecureFileIO.updateFile(encryptedFileLocation, newPassword, oldPassword)
+            clearFieldUpdatePassword()
             showToast("Updating password")
         } catch (e: Exception) {
             showToast("Failed updating password")
-            showLog(LevelInfo.Error, TAG, e.message.toString())
+            showLog(e)
             e.printStackTrace()
         }
+    }
+
+    private fun clearFieldUpdatePassword() {
+        binding.etPasswordOp.clear()
+        binding.etPasswordNp.clear()
+        binding.etPasswordCnp.clear()
     }
 
     private fun prepareFiles() {
@@ -102,13 +124,9 @@ class BlockDataToFromFileActivity : AppCompatActivity() {
         val file = File(encryptedFileLocation)
         if (!file.exists()) {
             file.createNewFile()
-            showLog(LevelInfo.Debug, TAG, "Creating new file")
+            showLog("Creating new file")
         } else {
-            showLog(LevelInfo.Debug, TAG, "Use existing file")
+            showLog("Use existing file")
         }
-    }
-
-    companion object {
-        private const val TAG = "BlockDataFile"
     }
 }
