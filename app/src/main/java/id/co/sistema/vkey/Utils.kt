@@ -7,7 +7,7 @@ import android.widget.EditText
 import android.widget.Toast
 
 /**
- * This method for simplify, Log method from android framework.
+ * This method for simplify Log method from android framework.
  * For tracking the log, check with class name or "UtilsDebug"
  * */
 fun Context.showLog(message: String) {
@@ -17,7 +17,7 @@ fun Context.showLog(message: String) {
 }
 
 /**
- * This method for simplify, Log method from android framework.
+ * This method for simplify Log method from android framework.
  * For tracking the log, check with class name or "UtilsError".
  * */
 fun Context.showLog(exception: Exception) {

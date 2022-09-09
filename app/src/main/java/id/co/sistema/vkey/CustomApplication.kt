@@ -43,7 +43,10 @@ class CustomApplication : Application(), VGExceptionHandler,
                 super.onReceive(context, intent)
 
                 when {
-                    PROFILE_LOADED == intent?.action -> showLog("Profile is loaded...")
+                    PROFILE_LOADED == intent?.action -> {
+                        showLog("Profile is loaded...")
+                        vGuardMgr?.setThreatIntelligenceServerURL("https://sistemadev.my.id/")
+                    }
 
                     VOS_READY == intent?.action -> instanceVGuardManager(intent)
 
@@ -172,6 +175,7 @@ class CustomApplication : Application(), VGExceptionHandler,
     override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
         if (vGuardMgr == null && activity is SplashScreenActivity) {
             setupVGuard()
+            VosWrapper.getInstance(this).setLoggerBaseUrl("https://sistemadev.my.id/")
         }
     }
 

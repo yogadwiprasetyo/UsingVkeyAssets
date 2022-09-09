@@ -22,7 +22,7 @@ class SplashScreenActivity : AppCompatActivity() {
      */
     @Subscribe(threadMode = ThreadMode.POSTING)
     fun onMessageEvent(isStarted: Boolean?) {
-        showLog("isVosStarted: $isStarted")
+        showLog("Custom Application-isVosStarted: $isStarted")
         startActivity(Intent(this, MainActivity::class.java))
         finish()
     }

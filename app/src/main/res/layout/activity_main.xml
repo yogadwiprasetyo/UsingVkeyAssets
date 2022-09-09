@@ -192,7 +192,7 @@
             app:layout_constraintTop_toBottomOf="@id/tv_title_threat" />
 
         <View
-            android:id="@+id/divider_five"
+            android:id="@+id/divider_seven"
             style="@style/DivideBold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -200,6 +200,34 @@
 
         <TextView
             android:id="@+id/tv_title_cryptota"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:text="Crypto TA"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/divider_seven" />
+
+        <Button
+            android:id="@+id/btn_demo_cryptota"
+            style="@style/ButtonCustom"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Demo Crypto TA"
+            app:layout_constraintTop_toBottomOf="@id/tv_title_cryptota" />
+
+        <View
+            android:id="@+id/divider_five"
+            style="@style/DivideBold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/btn_demo_cryptota" />
+
+        <TextView
+            android:id="@+id/tv_title_secure_keyboard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
@@ -217,7 +245,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Demo Secure Keyboard"
-            app:layout_constraintTop_toBottomOf="@id/tv_title_cryptota" />
+            app:layout_constraintTop_toBottomOf="@id/tv_title_secure_keyboard" />
 
         <View
             android:id="@+id/divider_six"

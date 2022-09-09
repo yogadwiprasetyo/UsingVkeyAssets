@@ -14,8 +14,13 @@
         tools:node="replace" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" /> <!-- Required when targeting API Level 31 -->
+    <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS" /> <!-- Required when targeting Android 11 (API level 30) or higher -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+        </intent>
+    </queries>
 
     <application
         android:name=".CustomApplication"
@@ -30,7 +35,9 @@
         android:zygotePreloadName="vkey.android.vos.AppZygote"
         tools:replace="android:theme"
         tools:targetApi="32">
-
+        <activity
+            android:name=".cryptota.CryptotaActivity"
+            android:exported="false" />
         <!-- Required by Magisk (v23) root detection -->
         <uses-library
             android:name="org.apache.http.legacy"
@@ -38,21 +45,16 @@
 
         <service
             android:name="com.vkey.android.internal.vguard.cache.ProcessHttpRequestIntentService"
-            android:permission="android.permission.BIND_JOB_SERVICE" />
-
-        <!-- The `vkey.android.vos.MgService` service is required for Magisk (up to v23) root detection -->
+            android:permission="android.permission.BIND_JOB_SERVICE" /> <!-- The `vkey.android.vos.MgService` service is required for Magisk (up to v23) root detection -->
         <service
             android:name="vkey.android.vos.MgService"
             android:enabled="true"
             android:isolatedProcess="true"
             android:process=":vkey"
-            android:useAppZygote="true" />
-
-        <!-- For SDK to request for runtime permissions -->
+            android:useAppZygote="true" /> <!-- For SDK to request for runtime permissions -->
         <activity
             android:name="com.vkey.android.support.permission.VGuardPermissionActivity"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
-
         <activity
             android:name=".sfio.SecureKeyboardActivity"
             android:exported="false" />
@@ -74,7 +76,6 @@
         <activity
             android:name=".MainActivity"
             android:exported="false" />
-
         <activity
             android:name=".SplashScreenActivity"
             android:exported="true">
@@ -85,12 +86,5 @@
             </intent-filter>
         </activity>
     </application>
-
-    <!-- Required when targeting Android 11 (API level 30) or higher -->
-    <queries>
-        <intent>
-            <action android:name="android.intent.action.MAIN" />
-        </intent>
-    </queries>
 
 </manifest>

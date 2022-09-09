@@ -85,6 +85,7 @@ dependencies {
     implementation files("libs/vos-processor-android-4.9.1.2-Debug.aar")
     implementation files("libs/vos-app-protection-android-4.9.2.1-Debug.aar")
     implementation files("libs/securefileio-android-4.7.7.10-Debug.aar")
+    implementation files("libs/cryptota-android-4.8.2.24-Debug.aar")
 
     // Fix error java.lang.RuntimeException: Duplicate class com.google.common.util.concurrent.ListenableFuture
     implementation 'com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava'

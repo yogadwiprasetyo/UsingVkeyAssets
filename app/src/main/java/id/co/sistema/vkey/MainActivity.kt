@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.vkey.android.internal.vguard.engine.BasicThreatInfo
+import id.co.sistema.vkey.cryptota.CryptotaActivity
 import id.co.sistema.vkey.databinding.ActivityMainBinding
 import id.co.sistema.vkey.sfio.*
 import org.greenrobot.eventbus.EventBus
@@ -63,6 +64,11 @@ class MainActivity : AppCompatActivity() {
             // Move to Demo Secure Keyboard
             btnSecureKeyboard.setOnClickListener {
                 startActivity(Intent(context, SecureKeyboardActivity::class.java))
+            }
+
+            // Move to Demo Crypto TA
+            btnDemoCryptota.setOnClickListener {
+                startActivity(Intent(context, CryptotaActivity::class.java))
             }
         }
     }
