@@ -10,10 +10,10 @@ import android.os.Bundle
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.vkey.securefileio.SecureFileIO
-import id.co.sistema.vkey.PASSWORD
+import id.co.sistema.vkey.util.PASSWORD
 import id.co.sistema.vkey.databinding.ActivityExistingNonTextFileBinding
-import id.co.sistema.vkey.showLog
-import id.co.sistema.vkey.showToast
+import id.co.sistema.vkey.util.showLog
+import id.co.sistema.vkey.util.showToast
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream

@@ -65,6 +65,19 @@ dependencies {
     implementation 'com.google.android.material:material:1.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
 
+    // DI (Koin)
+    implementation "io.insert-koin:koin-android:3.2.0"
+
+    // Lifecycle (Live data & View model)
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1"
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.5.1"
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.5.1"
+
+    // Networking (Retrofit & OkHttp3)
+    implementation "com.squareup.retrofit2:retrofit:2.9.0"
+    implementation "com.squareup.retrofit2:converter-gson:2.9.0"
+    implementation "com.squareup.okhttp3:logging-interceptor:4.9.0"
+
     // Secure File IO
     api 'io.jsonwebtoken:jjwt-api:0.10.7'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.10.7'

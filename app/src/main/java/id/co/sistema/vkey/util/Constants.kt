@@ -1,4 +1,4 @@
-package id.co.sistema.vkey
+package id.co.sistema.vkey.util
 
 const val PROFILE_LOADED = "vkey.android.vguard.PROFILE_LOADED"
 const val VOS_FIRMWARE_RETURN_CODE_KEY = "vkey.android.vguard.FIRMWARE_RETURN_CODE"
@@ -7,3 +7,5 @@ const val STR_INPUT = "Quick brown fox jumps over the lazy dog. 1234567890 some_
 const val PASSWORD = "P@ssw0rd"
 const val DEFAULT_LONG = 0L
 const val LIMIT_TAG_NAME = 12
+const val BASE_URL = "https://cryptotademo.herokuapp.com/"
+const val KEY_DATASTORE = "Sistema_CA_RSA_2022"

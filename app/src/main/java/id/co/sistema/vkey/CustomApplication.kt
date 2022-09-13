@@ -12,7 +12,12 @@ import android.os.Parcelable
 import com.vkey.android.internal.vguard.engine.BasicThreatInfo
 import com.vkey.android.vguard.*
 import com.vkey.android.vguard.VGuardBroadcastReceiver.*
+import id.co.sistema.vkey.di.networkModule
+import id.co.sistema.vkey.di.viewModelModule
+import id.co.sistema.vkey.util.*
 import org.greenrobot.eventbus.EventBus
+import org.koin.android.ext.koin.androidContext
+import org.koin.core.context.startKoin
 import vkey.android.vos.Vos
 import vkey.android.vos.VosWrapper
 
@@ -99,7 +104,7 @@ class CustomApplication : Application(), VGExceptionHandler,
         }
 
         /**
-         * EventBus is used to send the threat into [MainActivity]. It need to be delayed for 5 sec
+         * EventBus is used to send the threat into []. It need to be delayed for 5 sec
          * to make sure [MainActivity] is already rendered on the screen.
          */
         Handler(Looper.getMainLooper()).postDelayed({
@@ -170,6 +175,15 @@ class CustomApplication : Application(), VGExceptionHandler,
     override fun onCreate() {
         super.onCreate()
         registerActivityLifecycleCallbacks(this)
+
+        // Initiate Koin for dependency injection
+        startKoin {
+            androidContext(this@CustomApplication)
+            modules(
+                networkModule,
+                viewModelModule
+            )
+        }
     }
 
     override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {

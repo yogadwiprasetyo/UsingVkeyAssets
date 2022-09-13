@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.vkey.android.secure.keyboard.VKeySecureKeypad
 import id.co.sistema.vkey.R
-import id.co.sistema.vkey.clear
+import id.co.sistema.vkey.util.clear
 import id.co.sistema.vkey.databinding.ActivitySecureKeyboardBinding
 
 class SecureKeyboardActivity : AppCompatActivity() {

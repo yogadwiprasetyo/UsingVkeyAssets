@@ -4,6 +4,8 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.vkey.android.internal.vguard.engine.BasicThreatInfo
+import id.co.sistema.vkey.main.MainActivity
+import id.co.sistema.vkey.util.showLog
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode

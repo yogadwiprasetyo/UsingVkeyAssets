@@ -1,4 +1,4 @@
-package id.co.sistema.vkey
+package id.co.sistema.vkey.util
 
 import android.app.Activity
 import android.content.Context

@@ -4,10 +4,10 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.vkey.securefileio.SecureFileIO
-import id.co.sistema.vkey.clear
+import id.co.sistema.vkey.util.clear
 import id.co.sistema.vkey.databinding.ActivityBlockDataBinding
-import id.co.sistema.vkey.fieldIsEmpty
-import id.co.sistema.vkey.showLog
+import id.co.sistema.vkey.util.fieldIsEmpty
+import id.co.sistema.vkey.util.showLog
 
 class BlockDataActivity : AppCompatActivity() {
 

@@ -1,4 +1,4 @@
-package id.co.sistema.vkey
+package id.co.sistema.vkey.main
 
 import android.view.LayoutInflater
 import android.view.ViewGroup

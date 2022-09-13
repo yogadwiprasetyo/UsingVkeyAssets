@@ -3,8 +3,8 @@ package id.co.sistema.vkey.sfio
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.vkey.securefileio.SecureFileIO
-import id.co.sistema.vkey.*
 import id.co.sistema.vkey.databinding.ActivityExistingTextFileBinding
+import id.co.sistema.vkey.util.*
 import java.io.File
 import java.io.FileOutputStream
 
